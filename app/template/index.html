@@ -4,23 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background: #f9f9f9;
+        }
+        .article {
+            background: #fff;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .reactions button {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+        form {
+            margin-bottom: 2rem;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button, input[type="submit"] {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover, input[type="submit"]:hover {
+            background: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the News Website</h1>
-    
+    <h1>📰 Welcome to the News Website</h1>
+
+    <!-- Search Form -->
     <form action="/articles/search" method="get">
         <input type="text" name="query" placeholder="Search articles..." />
         <button type="submit">Search</button>
     </form>
-    
+
+    <!-- Create Article Form -->
+    <h2>Create New Article</h2>
+    <form id="articleForm" action="/articles" method="post">
+        <label for="title">Title:</label>
+        <input type="text" name="title" id="title" required>
+
+        <label for="content">Content:</label>
+        <textarea name="content" id="content" rows="4" required></textarea>
+
+        <label for="category">Category:</label>
+        <input type="text" name="category" id="category">
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- Articles List -->
     <div>
         {% for article in articles %}
-        <div>
+        <div class="article">
             <h2>{{ article.title }}</h2>
             <p>{{ article.content }}</p>
+            <p><strong>Category:</strong> {{ article.category }}</p>
             <a href="/articles/{{ article.id }}">Read more</a>
+
+            <div class="reactions" id="reactions-{{ article.id }}">
+                <button onclick="react({{ article.id }}, 'like')">👍 <span id="like-{{ article.id }}">{{ article.likes }}</span></button>
+                <button onclick="react({{ article.id }}, 'dislike')">👎 <span id="dislike-{{ article.id }}">{{ article.dislikes }}</span></button>
+            </div>
         </div>
         {% endfor %}
     </div>
+
+    <!-- Like/Dislike Logic -->
+    <script>
+    function react(id, type) {
+        fetch(`/articles/${id}/${type}`, {
+            method: "POST"
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById(`like-${id}`).textContent = data.likes;
+            document.getElementById(`dislike-${id}`).textContent = data.dislikes;
+        })
+        .catch(error => console.error("Error:", error));
+    }
+    </script>
+
+    <!-- API Key Submission Logic -->
+    <script>
+    document.getElementById("articleForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: "POST",
+            headers: {
+                "x-api-key": "supersecretjournalistkey"
+            },
+            body: formData
+        }).then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                alert("Submission failed");
+            }
+        });
+    });
+    </script>
 </body>
 </html>

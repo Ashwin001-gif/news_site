@@ -20,3 +20,4 @@ class Comment(Base):
     content = Column(Text)
     article_id = Column(Integer, ForeignKey("articles.id"))
     article = relationship("Article", back_populates="comments")
+
