@@ -1,24 +1,24 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.requests import Request
-from sqlalchemy.orm import Session
-
-from app.routers import articles  # Correct absolute import for articles router
-from app import models, crud
+from app.routers import articles
 from app.database import engine, get_db
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from fastapi.responses import HTMLResponse
+from fastapi.requests import Request
 
 app = FastAPI()
 
 # Create database tables
+from app import models
 models.Base.metadata.create_all(bind=engine)
 
-# Mount static files
+# Mount static files for frontend
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Set up templates
-templates = Jinja2Templates(directory="app/template")
+# Set up templates for frontend
+templates = Jinja2Templates(directory="app/templates")
 
 # Include article routes
 app.include_router(articles.router)
