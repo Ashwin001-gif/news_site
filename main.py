@@ -4,9 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
 
-from app.routers import articles
-from app.database import engine
-from app.models import Base
+
+from routers import articles
+from database import engine
+from models import Base
+
 
 # Initialize FastAPI app
 app = FastAPI()
