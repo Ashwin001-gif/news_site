@@ -1,11 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
 from sqlalchemy.orm import Session
 
-import articles  # ✅ import your articles module directly
+from app.routers import articles  # Correct absolute import for articles router
 from app import models, crud
 from app.database import engine, get_db
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
 from sqlalchemy.orm import Session
-from . import schemas, crud  # Use relative imports here
-from .database import get_db  # Also use relative import for get_db
+from app import schemas, crud
+from app.database import get_db
 
 router = APIRouter()
 
@@ -19,5 +19,3 @@ def create_article(
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     return crud.create_article(db=db, article=article)
-
-
