@@ -1,33 +1,30 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi import Request
+from fastapi.requests import Request
+from sqlalchemy.orm import Session
 
+import articles  # ✅ import your articles module directly
+from app import models, crud
+from app.database import engine, get_db
 
-from routers import articles
-from database import engine
-from models import Base
-
-
-# Initialize FastAPI app
 app = FastAPI()
 
-# Mount the static folder to serve static files (e.g., CSS, JS)
+# Create database tables
+models.Base.metadata.create_all(bind=engine)
+
+# Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Setup templates folder for rendering HTML files
-templates = Jinja2Templates(directory="app/templates")
+# Set up templates
+templates = Jinja2Templates(directory="app/template")
 
-# Homepage route rendering an HTML template (frontend)
+# Include article routes
+app.include_router(articles.router)
+
+# Homepage route
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
-# You can keep your API route (like articles) intact here
-@app.get("/api/articles")
-def get_articles():
-    # Your existing API logic
-    return {"message": "Articles data will go here!"}
-
-# You can add other routes for the backend as needed
+def read_root(request: Request, db: Session = Depends(get_db)):
+    articles_list = crud.get_articles(db)
+    return templates.TemplateResponse("index.html", {"request": request, "articles": articles_list})
