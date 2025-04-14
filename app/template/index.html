@@ -4,17 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News Website</title>
-    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>Latest Articles</h1>
-    <ul>
+    <h1>Welcome to the News Website</h1>
+    
+    <form action="/articles/search" method="get">
+        <input type="text" name="query" placeholder="Search articles..." />
+        <button type="submit">Search</button>
+    </form>
+    
+    <div>
         {% for article in articles %}
-            <li>
-                <h2>{{ article.title }}</h2>
-                <p>{{ article.content }}</p>
-            </li>
+        <div>
+            <h2>{{ article.title }}</h2>
+            <p>{{ article.content }}</p>
+            <a href="/articles/{{ article.id }}">Read more</a>
+        </div>
         {% endfor %}
-    </ul>
+    </div>
 </body>
 </html>
