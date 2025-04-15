@@ -5,7 +5,7 @@ from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session  # <-- This is the fix
 
 from app.database import get_db
 from app import crud, models, schemas
@@ -13,47 +13,47 @@ from app.routers import articles
 
 import os
 
-# Create database engine and session
-DATABASE_URL = "sqlite:///./test.db"  # Update with your actual database URL on Render or local file path
+# Database setup
+DATABASE_URL = "sqlite:///./test.db"  # Replace with actual DB for production
+
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
-# Ensure tables are created on app startup
+# FastAPI app instance
 app = FastAPI()
 
+# Create tables on startup
 @app.on_event("startup")
 def on_startup():
-    # Create all tables
     Base.metadata.create_all(bind=engine)
 
-# Mount static directory for CSS/JS if needed
+# Serve static files (CSS/JS)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Set up template directory
+# Templates directory
 templates = Jinja2Templates(directory="templates")
 
-# API Key for secure article creation
+# API key config
 API_KEY = "supersecretjournalistkey"
 api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
 
-# Include any API routers
+# Include routers
 app.include_router(articles.router)
 
-# Homepage: Display all articles
+# Homepage
 @app.get("/", response_class=HTMLResponse)
 def read_home(request: Request, db: Session = Depends(get_db)):
     articles = crud.get_articles(db)
     return templates.TemplateResponse("index.html", {"request": request, "articles": articles})
 
-# Search route
+# Search
 @app.get("/articles/search", response_class=HTMLResponse)
 def search_articles(request: Request, query: str, db: Session = Depends(get_db)):
     articles = crud.search_articles(db, query)
     return templates.TemplateResponse("index.html", {"request": request, "articles": articles})
 
-# Create article (form POST)
+# Create article
 @app.post("/articles", response_class=HTMLResponse)
 def create_article(
     request: Request,
@@ -69,13 +69,13 @@ def create_article(
     crud.create_article(db=db, article=article_data)
     return RedirectResponse("/", status_code=303)
 
-# Like article
+# Like
 @app.post("/articles/{article_id}/like")
 def like_article(article_id: int, db: Session = Depends(get_db)):
     article = crud.increment_like(db, article_id)
     return {"likes": article.likes, "dislikes": article.dislikes}
 
-# Dislike article
+# Dislike
 @app.post("/articles/{article_id}/dislike")
 def dislike_article(article_id: int, db: Session = Depends(get_db)):
     article = crud.increment_dislike(db, article_id)
