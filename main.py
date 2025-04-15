@@ -5,15 +5,20 @@ from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import get_db, engine
 from app import crud, models, schemas
 from app.routers import articles
+
+import os
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Mount static directory for CSS/JS if needed
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Create all tables
+models.Base.metadata.create_all(bind=engine)
+
+# Mount static directory for CSS/JS
+app.mount("/static", StaticFiles(directory=os.path.join(os.getcwd(), "static")), name="static")
 
 # Set up template directory
 templates = Jinja2Templates(directory="templates")
@@ -64,4 +69,3 @@ def like_article(article_id: int, db: Session = Depends(get_db)):
 def dislike_article(article_id: int, db: Session = Depends(get_db)):
     article = crud.increment_dislike(db, article_id)
     return {"likes": article.likes, "dislikes": article.dislikes}
-
