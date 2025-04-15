@@ -3,22 +3,33 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-from app.database import get_db, engine
+from app.database import get_db
 from app import crud, models, schemas
 from app.routers import articles
 
 import os
 
-# Initialize FastAPI app
+# Create database engine and session
+DATABASE_URL = "sqlite:///./test.db"  # Update with your actual database URL on Render or local file path
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+# Ensure tables are created on app startup
 app = FastAPI()
 
-# Create all tables
-models.Base.metadata.create_all(bind=engine)
+@app.on_event("startup")
+def on_startup():
+    # Create all tables
+    Base.metadata.create_all(bind=engine)
 
-# Mount static directory for CSS/JS
-app.mount("/static", StaticFiles(directory=os.path.join(os.getcwd(), "static")), name="static")
+# Mount static directory for CSS/JS if needed
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Set up template directory
 templates = Jinja2Templates(directory="templates")
